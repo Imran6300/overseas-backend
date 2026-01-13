@@ -181,7 +181,7 @@ exports.PostLogout = (req, res) => {
     }
 
     // 🔥 Clear session cookie
-    res.clearCookie("connect.sid", {
+    res.clearCookie("overseas.sid", {
       httpOnly: true,
       sameSite: "lax",
     });
