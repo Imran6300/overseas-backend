@@ -1,22 +1,24 @@
-const express = require("express")
-const AuthRouter = express.Router()
+const express = require("express");
+const AuthRouter = express.Router();
 
+const authController = require("../controllers/authController");
 const {
-  GetLogin,
-  PostLogin,
-  PostLogout,
-  GetSignup,
-  PostSignup,
-} = require("../controllers/authcontroller")
+  loginValidators,
+  signupValidators,
+} = require("../validators/authValidators");
 
-AuthRouter.get("/login", GetLogin)
+// Login
+AuthRouter.get("/login", authController.GetLogin);
+AuthRouter.post("/login", loginValidators, authController.PostLogin);
 
-AuthRouter.post("/login", PostLogin)
+// Signup
+AuthRouter.get("/signup", authController.GetSignup);
+AuthRouter.post("/signup", signupValidators, authController.PostSignup);
 
-AuthRouter.get("/signup", GetSignup)
+// Logout (POST — IMPORTANT)
+AuthRouter.post("/logout", authController.PostLogout);
 
-AuthRouter.post("/signup", PostSignup)
+// Auth check
+AuthRouter.get("/me", authController.GetMe);
 
-AuthRouter.get("/logout", PostLogout)
-
-module.exports = { AuthRouter }
+module.exports = { AuthRouter };

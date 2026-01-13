@@ -1,86 +1,83 @@
-//core modules
+// ================= CORE MODULES =================
 const path = require("path");
 
-//external modules
+// ================= EXTERNAL MODULES =================
 const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors");
 require("dotenv").config();
-//cookies and sessions
-const cookieParser = require("cookie-parser")
-const session = require("express-session")
-const MongoDBStore = require("connect-mongodb-session")(session)
 
+// ================= COOKIES & SESSIONS =================
+const cookieParser = require("cookie-parser");
+const session = require("express-session");
+const MongoStore = require("connect-mongo").default; // ✅ FIXED
 
-//routes
-const { UserRouter } = require("./routes/userroute")
-const { AuthRouter } = require("./routes/authrouter")
-const { HostRouter } = require("./routes/hostrouter")
+// ================= ROUTES =================
+const { AuthRouter } = require("./routes/authrouter");
 
+// ================= APP INIT =================
 const app = express();
 
-app.set("view engine", "ejs");
-app.set("ejs", path.join(__dirname, "views"));
-app.use(express.static(path.join(__dirname, "public")))
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// ================= BASIC MIDDLEWARE =================
 app.set("trust proxy", 1);
 
-//this helps us to read cookies
-app.use(cookieParser())
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-const DB_PATH = process.env.DB;
+// Optional (safe to keep)
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+app.use(express.static(path.join(__dirname, "public")));
 
-//new session collection
+// ================= CORS =================
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 
-const Store = new MongoDBStore({
-  uri: DB_PATH,
-  collection: "overseas_sessions"
-})
+// ================= SESSION (connect-mongo v6 CORRECT) =================
+app.use(
+  session({
+    name: "overseas.sid",
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
 
-Store.on("error", (error) => {
-  console.error("Session store error:", error);
-})
+    store: MongoStore.create({
+      mongoUrl: process.env.DB,
+      collectionName: "overseas_sessions",
+    }),
 
-//session
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  store: Store,
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax", // CSRF protection
-    maxAge: 1000 * 60 * 60 * 24 // 1 day
-  }
-}));
+    cookie: {
+      httpOnly: true,
+      secure: false, // true only with HTTPS in prod
+      sameSite: "lax",
+      maxAge: 1000 * 60 * 60 * 24,
+    },
+  })
+);
 
-app.use(req, res, next => {
-  req.isLoggedIn = req.session.isLoggedIn || false;
-  next()
-})
+// ================= AUTH STATE =================
+app.use((req, res, next) => {
+  req.isLoggedIn = !!req.session.isLoggedIn;
+  next();
+});
 
-//middle wares
+// ================= ROUTES =================
+app.use("/auth", AuthRouter);
 
-app.use("/auth", AuthRouter)
-
-app.use("/host", (req, res, next) => {
-  if (!req.isLoggedIn) {
-    return res.redirect("/auth/login")
-  }
-  next()
-})
-
-app.use("/host", HostRouter)
-
-app.use(UserRouter)
-
-mongoose.connect(DB_PATH).then(() => {
-  console.log("Connected To MongoDB");
-  app.listen(process.env.PORT, () => {
-    console.log("Server Is Started....");
+// ================= DB + SERVER =================
+mongoose
+  .connect(process.env.DB)
+  .then(() => {
+    console.log("Connected To MongoDB");
+    app.listen(process.env.PORT, () => {
+      console.log(`Server Is Started on port ${process.env.PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("MongoDB error:", err);
   });
-}).catch(err => {
-  console.log("error while connecting to db", err)
-})
-
