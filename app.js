@@ -33,7 +33,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // ================= CORS =================
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: "https://khizar-overseas.vercel.app",
     credentials: true,
   })
 );
