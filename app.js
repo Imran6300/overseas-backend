@@ -32,7 +32,8 @@ app.use(express.static(path.join(__dirname, "public")));
 // ================= CORS =================
 // ================= CORS (FIXED) =================
 const allowedOrigins = [
-  "https://khizar-overseas.vercel.app"
+  "https://khizar-overseas.vercel.app",
+  "http://localhost:3000"
 ];
 
 app.use((req, res, next) => {
