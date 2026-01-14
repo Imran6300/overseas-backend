@@ -40,10 +40,6 @@ app.use(
   })
 );
 
-// ✅ IMPORTANT: handle preflight explicitly
-app.options("*", cors());
-
-
 // ================= SESSION (connect-mongo v6 CORRECT) =================
 app.use(
   session({
