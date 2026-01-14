@@ -4,7 +4,6 @@ const path = require("path");
 // ================= EXTERNAL MODULES =================
 const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors");
 require("dotenv").config();
 
 // ================= COOKIES & SESSIONS =================
@@ -31,14 +30,37 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 
 // ================= CORS =================
-app.use(
-  cors({
-    origin: "https://khizar-overseas.vercel.app",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+// ================= CORS (FIXED) =================
+const allowedOrigins = [
+  "https://khizar-overseas.vercel.app"
+];
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Vary", "Origin"); // 🔥 ADD THIS
+  }
+
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,DELETE,OPTIONS"
+  );
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization"
+  );
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
+
+
 
 // ================= SESSION (connect-mongo v6 CORRECT) =================
 app.use(
