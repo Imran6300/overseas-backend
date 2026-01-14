@@ -35,8 +35,14 @@ app.use(
   cors({
     origin: "https://khizar-overseas.vercel.app",
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// ✅ IMPORTANT: handle preflight explicitly
+app.options("*", cors());
+
 
 // ================= SESSION (connect-mongo v6 CORRECT) =================
 app.use(
@@ -58,8 +64,8 @@ app.use(
     cookie: {
       path: "/",
       httpOnly: true,
-      secure: false, // true only with HTTPS
-      sameSite: "lax",
+      secure: true, // true only with HTTPS
+      sameSite: "none",
       maxAge: 1000 * 60 * 60 * 24,
     },
   })

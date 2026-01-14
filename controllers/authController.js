@@ -9,7 +9,6 @@ exports.GetLogin = (req, res) => {
   res.status(200).json({
     success: true,
     isLoggedIn: !!req.session.isLoggedIn,
-    title: "Login Page",
   });
 };
 
@@ -92,7 +91,6 @@ exports.GetSignup = (req, res) => {
   res.status(200).json({
     success: true,
     isLoggedIn: false,
-    title: "Signup Page",
   });
 };
 
