@@ -8,11 +8,9 @@ const {
 } = require("../validators/authValidators");
 
 // Login
-AuthRouter.get("/login", authController.GetLogin);
 AuthRouter.post("/login", loginValidators, authController.PostLogin);
 
 // Signup
-AuthRouter.get("/signup", authController.GetSignup);
 AuthRouter.post("/signup", signupValidators, authController.PostSignup);
 
 // Logout (POST — IMPORTANT)

@@ -3,16 +3,6 @@ const bcryptjs = require("bcryptjs");
 const User = require("../models/user");
 
 /* =========================
-   GET LOGIN (OPTIONAL INFO)
-========================= */
-exports.GetLogin = (req, res) => {
-  res.status(200).json({
-    success: true,
-    isLoggedIn: !!req.session.isLoggedIn,
-  });
-};
-
-/* =========================
    POST LOGIN
 ========================= */
 exports.PostLogin = async (req, res) => {
@@ -30,25 +20,17 @@ exports.PostLogin = async (req, res) => {
 
     // Find user
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(422).json({
+
+    // 🔐 Unified auth failure (anti user-enumeration)
+    if (!user || !(await bcryptjs.compare(password, user.password))) {
+      return res.status(401).json({
         success: false,
         isLoggedIn: false,
-        errors: ["User does not exist"],
+        errors: ["Invalid email or password"],
       });
     }
 
-    // Compare password
-    const isMatch = await bcryptjs.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(422).json({
-        success: false,
-        isLoggedIn: false,
-        errors: ["Invalid password"],
-      });
-    }
-
-    // 🔐 Regenerate session (IMPORTANT)
+    // 🔐 Regenerate session (prevents session fixation)
     req.session.regenerate(err => {
       if (err) {
         return res.status(500).json({
@@ -65,7 +47,15 @@ exports.PostLogin = async (req, res) => {
         email: user.email,
       };
 
-      req.session.save(() => {
+      req.session.save(err => {
+        if (err) {
+          return res.status(500).json({
+            success: false,
+            isLoggedIn: false,
+            errors: ["Failed to save session"],
+          });
+        }
+
         res.status(200).json({
           success: true,
           isLoggedIn: true,
@@ -82,16 +72,6 @@ exports.PostLogin = async (req, res) => {
       errors: ["Server error"],
     });
   }
-};
-
-/* =========================
-   GET SIGNUP (OPTIONAL INFO)
-========================= */
-exports.GetSignup = (req, res) => {
-  res.status(200).json({
-    success: true,
-    isLoggedIn: false,
-  });
 };
 
 /* =========================
@@ -113,7 +93,7 @@ exports.PostSignup = async (req, res) => {
     // Check existing user
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(422).json({
+      return res.status(409).json({
         success: false,
         isLoggedIn: false,
         errors: ["Email already registered"],
@@ -130,7 +110,7 @@ exports.PostSignup = async (req, res) => {
       password: hashedPassword,
     });
 
-    // 🔐 Regenerate session after signup (recommended)
+    // 🔐 Regenerate session after signup
     req.session.regenerate(err => {
       if (err) {
         return res.status(500).json({
@@ -147,7 +127,15 @@ exports.PostSignup = async (req, res) => {
         email: user.email,
       };
 
-      req.session.save(() => {
+      req.session.save(err => {
+        if (err) {
+          return res.status(500).json({
+            success: false,
+            isLoggedIn: false,
+            errors: ["Failed to save session"],
+          });
+        }
+
         res.status(201).json({
           success: true,
           isLoggedIn: true,
@@ -174,11 +162,11 @@ exports.PostLogout = (req, res) => {
     if (err) {
       return res.status(500).json({
         success: false,
-        message: "Logout failed",
+        errors: ["Logout failed"],
       });
     }
 
-    // 🔥 Clear session cookie
+    // 🔥 Clear session cookie (must match session config)
     res.clearCookie("overseas.sid", {
       httpOnly: true,
       sameSite: "lax",
