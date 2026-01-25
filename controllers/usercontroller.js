@@ -5,3 +5,7 @@ module.exports.PostCounselingForm = (req, res) => {
 module.exports.PostAssessmentForm = (req, res) => {
   console.log(req.body)
 }
+
+module.exports.PostContactForm = (req, res) => {
+  console.log(req.body)
+}
