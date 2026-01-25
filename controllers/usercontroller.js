@@ -1,7 +1,3 @@
-// module.exports.GetHome = (req, res) => {
-//   res.render()
-// }
-
-// module.exports.PostHomeForm = (req, res) => {
-//   res.redirect("/")
-// }
+module.exports.PostCounselingForm = (req, res) => {
+  console.log(req.body)
+}

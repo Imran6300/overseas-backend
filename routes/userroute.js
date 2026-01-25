@@ -1,10 +1,8 @@
-// const express = require("express")
-// const UserRouter = express.Router()
+const express = require("express")
+const UserRouter = express.Router()
 
-// const { GetHome, PostHomeForm } = require("../controllers/usercontroller")
+const { PostCounselingForm } = require("../controllers/usercontroller")
 
-// UserRouter.get("/", GetHome)
+UserRouter.post("/api/counseling", PostCounselingForm)
 
-// UserRouter.post("/homeform", PostHomeForm)
-
-// module.exports = { UserRouter }
+module.exports = { UserRouter }
